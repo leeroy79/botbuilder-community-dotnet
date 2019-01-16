@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -18,7 +19,8 @@ namespace Bot.Builder.Community.Adapters.Alexa.Helpers
                 throw new InvalidOperationException("Alexa Request Invalid: Request Timestamp Missing");
             }
 
-            var requestTimestamp = DateTime.Parse(requestBody.Request.Timestamp);
+            // var requestTimestamp = DateTime.Parse(requestBody.Request.Timestamp);
+            var requestTimestamp = Convert.ToDateTime(requestBody.Request.Timestamp, new CultureInfo("en-US", false).DateTimeFormat);
 
             if (requestTimestamp.AddSeconds(150) <= DateTime.UtcNow)
             {
