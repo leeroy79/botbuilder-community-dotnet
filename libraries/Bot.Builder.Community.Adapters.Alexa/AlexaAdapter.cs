@@ -9,6 +9,7 @@ using Bot.Builder.Community.Adapters.Alexa.Directives;
 using Bot.Builder.Community.Adapters.Alexa.Integration;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
+using Newtonsoft.Json;
 
 namespace Bot.Builder.Community.Adapters.Alexa
 {
@@ -22,12 +23,18 @@ namespace Bot.Builder.Community.Adapters.Alexa
         {
             TurnContext context = null;
 
+            Trace.TraceInformation("Incoming Alexa request:");
+            Trace.TraceInformation(JsonConvert.SerializeObject(alexaRequest));
+
             try
             {
                 Options = alexaOptions;
 
                 var activity = RequestToActivity(alexaRequest);
                 BotAssert.ActivityNotNull(activity);
+
+                Trace.TraceInformation("Transformed bot framework activity:");
+                Trace.TraceInformation(JsonConvert.SerializeObject(activity));
 
                 context = new TurnContext(this, activity);
 
@@ -145,6 +152,9 @@ namespace Bot.Builder.Community.Adapters.Alexa
 
         private AlexaResponseBody CreateResponseFromLastActivity(IEnumerable<Activity> activities, ITurnContext context)
         {
+            Trace.TraceInformation("Outgoing bot framework activities:");
+            Trace.TraceInformation(JsonConvert.SerializeObject(activities));
+
             var response = new AlexaResponseBody()
             {
                 Version = "1.0",
@@ -164,6 +174,10 @@ namespace Bot.Builder.Community.Adapters.Alexa
                     Type = AlexaOutputSpeechType.PlainText,
                     Text = string.Empty
                 };
+
+                Trace.TraceInformation("Outgoing Alexa response:");
+                Trace.TraceInformation(JsonConvert.SerializeObject(response));
+
                 return response;
             }
 
@@ -230,6 +244,9 @@ namespace Bot.Builder.Community.Adapters.Alexa
                 default:
                     break;
             }
+
+            Trace.TraceInformation("Outgoing Alexa response:");
+            Trace.TraceInformation(JsonConvert.SerializeObject(response));
 
             return response;
         }
