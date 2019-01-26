@@ -20,6 +20,8 @@ namespace Bot.Builder.Community.Adapters.Alexa
 
         private static ConcurrentDictionary<string, string> ConversationIdMap { get; set; }
 
+        private static ConcurrentDictionary<string, string> UserIdMap { get; set; }
+
         private AlexaOptions Options { get; set; }
 
         public AlexaAdapter()
@@ -27,6 +29,11 @@ namespace Bot.Builder.Community.Adapters.Alexa
             if (ConversationIdMap == null)
             {
                 ConversationIdMap = new ConcurrentDictionary<string, string>();
+            }
+
+            if (UserIdMap == null)
+            {
+                UserIdMap = new ConcurrentDictionary<string, string>();
             }
         }
 
@@ -127,15 +134,19 @@ namespace Bot.Builder.Community.Adapters.Alexa
         private static Activity RequestToActivity(AlexaRequestBody skillRequest)
         {
             var system = skillRequest.Context.System;
+            
+            // var userId = system.User.UserId;
+            var userId = MapUserId(system.User.UserId);
 
-            var conversationId = GetMappedConversationId(skillRequest, system);
+            // var conversationId = GetMappedConversationId(skillRequest, system);
+            var conversationId = $"{system.Application.ApplicationId}:{userId}";
 
             var activity = new Activity
             {
                 ChannelId = "alexa",
                 ServiceUrl = $"{system.ApiEndpoint}?token ={system.ApiAccessToken}",
                 Recipient = new ChannelAccount(system.Application.ApplicationId, "skill"),
-                From = new ChannelAccount(system.User.UserId, "user"),
+                From = new ChannelAccount(userId, "user"),
                 Conversation = new ConversationAccount(false, "conversation", conversationId),
                 Type = skillRequest.Request.Type,
                 Id = skillRequest.Request.RequestId,
@@ -158,6 +169,19 @@ namespace Bot.Builder.Community.Adapters.Alexa
             activity.ChannelData = skillRequest;
 
             return activity;
+        }
+
+        private static string MapUserId(string userId)
+        {
+            var mappedUserId = string.Empty;
+
+            if (!ConversationIdMap.TryGetValue(userId, out mappedUserId))
+            {
+                mappedUserId = Guid.NewGuid().ToString();
+                ConversationIdMap.TryAdd(userId, mappedUserId);
+            }
+
+            return mappedUserId;
         }
 
         private static string GetMappedConversationId(AlexaRequestBody skillRequest, AlexaSystem system)
