@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -17,7 +18,17 @@ namespace Bot.Builder.Community.Adapters.Alexa
     {
         private Dictionary<string, List<Activity>> Responses { get; set; }
 
+        private static ConcurrentDictionary<string, string> ConversationIdMap { get; set; }
+
         private AlexaOptions Options { get; set; }
+
+        public AlexaAdapter()
+        {
+            if (ConversationIdMap == null)
+            {
+                ConversationIdMap = new ConcurrentDictionary<string, string>();
+            }
+        }
 
         public async Task<AlexaResponseBody> ProcessActivity(AlexaRequestBody alexaRequest, AlexaOptions alexaOptions, BotCallbackHandler callback)
         {
@@ -117,16 +128,15 @@ namespace Bot.Builder.Community.Adapters.Alexa
         {
             var system = skillRequest.Context.System;
 
+            var conversationId = GetMappedConversationId(skillRequest, system);
+
             var activity = new Activity
             {
                 ChannelId = "alexa",
                 ServiceUrl = $"{system.ApiEndpoint}?token ={system.ApiAccessToken}",
                 Recipient = new ChannelAccount(system.Application.ApplicationId, "skill"),
                 From = new ChannelAccount(system.User.UserId, "user"),
-
-                Conversation = new ConversationAccount(false, "conversation",
-                    $"{system.Application.ApplicationId}:{system.User.UserId}"),
-
+                Conversation = new ConversationAccount(false, "conversation", conversationId),
                 Type = skillRequest.Request.Type,
                 Id = skillRequest.Request.RequestId,
                 Timestamp = DateTime.ParseExact(skillRequest.Request.Timestamp, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture),
@@ -148,6 +158,21 @@ namespace Bot.Builder.Community.Adapters.Alexa
             activity.ChannelData = skillRequest;
 
             return activity;
+        }
+
+        private static string GetMappedConversationId(AlexaRequestBody skillRequest, AlexaSystem system)
+        {
+            var conversationId = string.Empty;
+
+            var key = $"{system.Application.ApplicationId}:{system.User.UserId}";
+
+            if (!ConversationIdMap.TryGetValue(key, out conversationId))
+            {
+                conversationId = Guid.NewGuid().ToString();
+                ConversationIdMap.TryAdd(key, conversationId);
+            }
+
+            return conversationId;
         }
 
         private AlexaResponseBody CreateResponseFromLastActivity(IEnumerable<Activity> activities, ITurnContext context)
