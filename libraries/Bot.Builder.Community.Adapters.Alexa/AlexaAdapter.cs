@@ -143,7 +143,7 @@ namespace Bot.Builder.Community.Adapters.Alexa
 
             var activity = new Activity
             {
-                ChannelId = "alexa",
+                ChannelId = AlexaConstants.AlexaChannelId,
                 ServiceUrl = $"{system.ApiEndpoint}?token ={system.ApiAccessToken}",
                 Recipient = new ChannelAccount(system.Application.ApplicationId, "skill"),
                 From = new ChannelAccount(userId, "user"),

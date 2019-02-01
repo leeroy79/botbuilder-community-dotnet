@@ -23,7 +23,7 @@ namespace Bot.Builder.Community.Adapters.Alexa.Middleware
 
         public async Task OnTurnAsync(ITurnContext context, NextDelegate next, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (context.Activity.ChannelId == "alexa" && context.Activity.Type == AlexaRequestTypes.IntentRequest)
+            if (context.Activity.ChannelId == AlexaConstants.AlexaChannelId && context.Activity.Type == AlexaRequestTypes.IntentRequest)
             {
                 var alexaRequestBody = (AlexaRequestBody)context.Activity.ChannelData;
                 var alexaIntentRequest = (AlexaIntentRequest)alexaRequestBody.Request;
