@@ -139,7 +139,8 @@ namespace Bot.Builder.Community.Adapters.Alexa
             var userId = MapUserId(system.User.UserId);
 
             // var conversationId = GetMappedConversationId(skillRequest, system);
-            var conversationId = $"{system.Application.ApplicationId}:{userId}";
+            // var conversationId = $"{system.Application.ApplicationId}:{userId}";
+            var conversationId = skillRequest.Session.SessionId;
 
             var activity = new Activity
             {
